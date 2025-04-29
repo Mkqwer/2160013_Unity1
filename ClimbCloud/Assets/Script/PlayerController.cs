@@ -4,24 +4,30 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
 
-    float fMaxPositionX = 4.0f; //ÇÃ·¹ÀÌ¾î°¡ ÁÂ, ¿ì ÀÌµ¿½Ã °ÔÀÓ Ã¢À» ¹ş¾î³ªÁö ¾Êµµ·Ï Vecter ÃÖ´ë°ªÀ» ¼³Á¤ º¯¼ö
-    float fMinPositionX = -4.0f; //ÇÃ·¹ÀÌ¾î°¡ ÁÂ, ¿ì ÀÌµ¿½Ã °ÔÀÓ Ã¢À» ¹ş¾î³ªÁö ¾Êµµ·Ï Vecter ÃÖ¼Ú°ªÀ» ¼³Á¤ º¯¼ö
-    float fPositionX = 0.0f; //ÇÃ·¹ÀÌ¾î°¡ ÁÂ, ¿ì ÀÌµ¿ÇÒ ¼ö ÀÖ´Â X ÁÂÇ¥ ÀúÀå º¯¼ö
+    float fMaxPositionX = 4.0f; //í”Œë ˆì´ì–´ê°€ ì¢Œ, ìš° ì´ë™ì‹œ ê²Œì„ ì°½ì„ ë²—ì–´ë‚˜ì§€ ì•Šë„ë¡ Vecter ìµœëŒ€ê°’ì„ ì„¤ì • ë³€ìˆ˜
+    float fMinPositionX = -4.0f; //í”Œë ˆì´ì–´ê°€ ì¢Œ, ìš° ì´ë™ì‹œ ê²Œì„ ì°½ì„ ë²—ì–´ë‚˜ì§€ ì•Šë„ë¡ Vecter ìµœì†Ÿê°’ì„ ì„¤ì • ë³€ìˆ˜
+    float fPositionX = 0.0f; //í”Œë ˆì´ì–´ê°€ ì¢Œ, ìš° ì´ë™í•  ìˆ˜ ìˆëŠ” X ì¢Œí‘œ ì €ì¥ ë³€ìˆ˜
 
-    //Cat ¿ÀºêÁ§Æ®ÀÇ Rigidbody2D ÄÄÆ÷³ÍÆ®¸¦ °®´Â ¸â¹öº¯¼ö(m_)
+    public Transform player; // ìµœëŒ€ ë†’ì´ë¥¼ ì²´í¬í•˜ê¸°ìœ„í•œ í”Œë ˆì´ì–´ ì˜¤ë¸Œì íŠ¸ ì„¤ì •
+    public TextMeshProUGUI resultText; // ê²Œì„ì˜¤ë²„ì‹œ ìµœì¢…ë†’ì´ë¥¼ ë³´ì—¬ì£¼ëŠ” í…ìŠ¤íŠ¸ ì˜¤ë¸Œì íŠ¸
+    private float maxHeight = 0f; // ìµœê³  ë†’ì´ì €ì¥í•˜ëŠ” ë³€ìˆ˜
+
+
+    //Cat ì˜¤ë¸Œì íŠ¸ì˜ Rigidbody2D ì»´í¬ë„ŒíŠ¸ë¥¼ ê°–ëŠ” ë©¤ë²„ë³€ìˆ˜(m_)
     Rigidbody2D m_rigid2DCat = null;
     Animator m_animatorcat = null;
-    //ÇÃ·¹ÀÌ¾î¿¡ °¡ÇÒ Èû °ªÀ» ÀúÀåÇÒ º¯¼ö
+    //í”Œë ˆì´ì–´ì— ê°€í•  í˜ ê°’ì„ ì €ì¥í•  ë³€ìˆ˜
     float fjumpForce = 380.0f;
-    //ÇÃ·¹ÀÌ¾î ÁÂ, ¿ì·Î ¿òÁ÷ÀÌ´Â °¡¼Óµµ
+    //í”Œë ˆì´ì–´ ì¢Œ, ìš°ë¡œ ì›€ì§ì´ëŠ” ê°€ì†ë„
     float fwalkForce = 20.0f;
-    //ÇÃ·¹ÀÌ¾îÀÇ ÀÌµ¿¼Óµµ°¡ ÁöÁ¤ÇÑ ÃÖ°í ¼Óµµ
+    //í”Œë ˆì´ì–´ì˜ ì´ë™ì†ë„ê°€ ì§€ì •í•œ ìµœê³  ì†ë„
     float fmaxWalkSpeed = 2.0f;
-    //ÇÃ·¹ÀÌ¾Æ ÁÂ¿ì ¿òÁ÷ÀÓ Å° °ª: ¿À¸¥ÂÊ È­»ì Å° -> 1,¿ŞÂÊ È­»ì Å° -> 1, ¿òÁ÷ÀÌÁö ¾ÊÀ» ‹š -> 0 
+    //í”Œë ˆì´ì•„ ì¢Œìš° ì›€ì§ì„ í‚¤ ê°’: ì˜¤ë¥¸ìª½ í™”ì‚´ í‚¤ -> 1,ì™¼ìª½ í™”ì‚´ í‚¤ -> 1, ì›€ì§ì´ì§€ ì•Šì„ Â‹Âš -> 0 
     int nLeftRightKeyValue = 0;
     //
     float fthreshold = 0.2f;
@@ -30,57 +36,63 @@ public class PlayerController : MonoBehaviour
         Application.targetFrameRate = 60;
         m_rigid2DCat = GetComponent<Rigidbody2D>();
         m_animatorcat = GetComponent<Animator>();
+        resultText.gameObject.SetActive(false); // ê²°ê³¼ë¥¼ ë³´ì—¬ì£¼ëŠ” í…ìŠ¤íŠ¸ ë¹„í™œì„±í™”
     }
 
     void Update()
     {
-        // Á¡ÇÁ
+        // ì í”„
+<<<<<<< HEAD
+   
+=======
         if (Input.GetMouseButtonDown(0) && m_rigid2DCat.linearVelocity.y == 0)
         {
             m_animatorcat.SetTrigger("JumpTrigger");
             m_rigid2DCat.AddForce(transform.up * fjumpForce);
         }
+>>>>>>> eea71aaa488f0aca87374ad7a67eee42b9b9c779
         if (Input.GetKey(KeyCode.Space) && m_rigid2DCat.linearVelocity.y == 0)
         {
             m_animatorcat.SetTrigger("JumpTrigger");
             m_rigid2DCat.AddForce(transform.up * fjumpForce);
         }
 
-            // ÁÂ¿ìÀÌµ¿
-            // ÇÃ·¹ÀÌ¾î¸¦ ¸ØÃß°ÔÇÏ´Â ÄÚµå
+        // ì¢Œìš°ì´ë™
+        // í”Œë ˆì´ì–´ë¥¼ ë©ˆì¶”ê²Œí•˜ëŠ” ì½”ë“œ
         if (Input.GetKey(KeyCode.LeftShift))
         {
             nLeftRightKeyValue = 0;
         }
-        // ÇÃ·¹ÀÌ¾î¸¦ ¿À¸¥ÂÊÀ¸·Î ÀÌµ¿½ÃÅ°´Â ÄÚµå
+        // í”Œë ˆì´ì–´ë¥¼ ì˜¤ë¥¸ìª½ìœ¼ë¡œ ì´ë™ì‹œí‚¤ëŠ” ì½”ë“œ
         if (Input.GetKey(KeyCode.RightArrow))
         {
             nLeftRightKeyValue = 1;
         }
-        // ÇÃ·¹ÀÌ¾î¸¦ ¿ŞÂÊÀ¸·Î ÀÌµ¿½ÃÅ°´Â ÄÚµå
+        // í”Œë ˆì´ì–´ë¥¼ ì™¼ìª½ìœ¼ë¡œ ì´ë™ì‹œí‚¤ëŠ” ì½”ë“œ
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             nLeftRightKeyValue = -1;
         }
+        // Xì¢Œí‘œ ê°’ì„ ì¼ì • ì´ìƒ ë²—ì–´ë‚˜ì§€ ì•Šê²Œí•˜ëŠ” ì½”ë“œ
         fPositionX = Mathf.Clamp(transform.position.x, fMinPositionX, fMaxPositionX);
         transform.position = new Vector3(fPositionX, transform.position.y, transform.position.z);
-        // m_rigid2DCat.AddForce(transform.right * fwalkForce * nLeftRightKeyValue);
-
-        // ÇÃ·¹ÀÌ¾î ½ºÇÇµå
+        
+        
+        // í”Œë ˆì´ì–´ ìŠ¤í”¼ë“œ
         float speedx = Mathf.Abs(m_rigid2DCat.linearVelocity.x);
 
-        // ½ºÇÇµå Á¦ÇÑ
+        // ìŠ¤í”¼ë“œ ì œí•œ
         if (speedx < fmaxWalkSpeed)
         {
-            m_rigid2DCat.AddForce(transform.right * fwalkForce * nLeftRightKeyValue );
+            m_rigid2DCat.AddForce(transform.right * fwalkForce * nLeftRightKeyValue);
         }
-    
-        // ¿òÁ÷ÀÌ´Â ¹æÇâ¿¡ µû¶ó ¹İÀüÇÑ´Ù.
+
+        // ì›€ì§ì´ëŠ” ë°©í–¥ì— ë”°ë¼ ë°˜ì „í•œë‹¤.
         if (nLeftRightKeyValue != 0)
         {
             transform.localScale = new Vector3(nLeftRightKeyValue, 1, 1);
         }
-        // ÇÃ·¹ÀÌ¾î ¼Óµµ¿¡ ¸ÂÃç ¾Ö´Ï¸ŞÀÌ¼Ç ¼Óµµ¸¦ ¹Ù²Û´Ù.
+        // í”Œë ˆì´ì–´ ì†ë„ì— ë§ì¶° ì• ë‹ˆë©”ì´ì…˜ ì†ë„ë¥¼ ë°”ê¾¼ë‹¤.
         if (m_rigid2DCat.linearVelocity.y == 0)
         {
             m_animatorcat.speed = speedx / 2.0f;
@@ -89,18 +101,34 @@ public class PlayerController : MonoBehaviour
         {
             m_animatorcat.speed = 1.0f;
         }
-        // ÇÃ·¹ÀÌ¾î°¡ È­¸é ¹ÛÀ¸·Î ³ª°¬´Ù¸é Ã³À½ºÎÅÍ
+
+        if (player.position.y > maxHeight) // í”Œë ˆì´ì–´ê°€ ì§€ë‚œë²ˆ ìµœê³  ë†’ì´ë³´ë‹¤ ë†’ì´ ì˜¬ë¼ê°€ë©´ ìµœê³ ê¸°ë¡ ê°±ì‹ 
+        {
+            maxHeight = player.position.y;
+        }
+
+        // í”Œë ˆì´ì–´ê°€ í™”ë©´ ë°–ìœ¼ë¡œ ë‚˜ê°”ë‹¤ë©´ ì²˜ìŒë¶€í„°
         if (transform.position.y < -10)
         {
-            SceneManager.LoadScene("GameScene");
+            GameOver(); // ê²Œì„ì˜¤ë²„ í˜¸ì¶œ
         }
 
     }
+<<<<<<< HEAD
 
-    // °ñ µµÂø
-    void OnTriggerEnter2D(Collider2D other)
+
+=======
+>>>>>>> eea71aaa488f0aca87374ad7a67eee42b9b9c779
+    void GameOver()
     {
-        Debug.Log("°ñ");
+        resultText.gameObject.SetActive(true); //ê²°ê³¼ í…ìŠ¤íŠ¸ë¥¼ ë³´ì´ê²Œ í•¨
+        resultText.text = "Best Height: " + maxHeight.ToString("F1") + "m"; // TMP í…ìŠ¤íŠ¸ì— ìµœì¢… ë†’ì´ë¥¼ ì†Œìˆ˜ì  1ìë¦¬ë¡œ í‘œì‹œí•œë‹¤.
+        Invoke("LoadClearScene", 2f);// 5ì´ˆ ë’¤ì— ClearSceneìœ¼ë¡œ ì”¬ ì „í™˜
+    }
+
+    // 5ì´ˆë’¤ì— ClearSceneìœ¼ë¡œ ì „í™˜í•˜ê¸° ìœ„í•œ ì½”ë“œ
+    void LoadClearScene()
+    {
         SceneManager.LoadScene("ClearScene");
     }
 }
